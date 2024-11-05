@@ -1,0 +1,52 @@
+# Python相关
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+
+# 环境变量文件
+.env
+*.env
+
+# Django相关
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+media
+
+# VS Code相关
+.vscode/
+
+# 虚拟环境
+venv/
+ENV/
+env/
+.venv/
+.ENV/
+.env/
+.Python
+
+# 操作系统相关
+.DS_Store
+Thumbs.db
+
+# MySQL数据库文件
+*.sql
+
+# PostgreSQL数据库文件
+*.psql
+
+# SQLite数据库文件
+*.sqlite3
+
+# 静态文件
+staticfiles/
+static/
+
+# 临时文件
+*.tmp
+*.temp

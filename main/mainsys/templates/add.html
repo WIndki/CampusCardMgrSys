@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Item</title>
+</head>
+<body>
+    <h1>Add Item</h1>
+    <form action="/add/" method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        {{ field }}
+        {% endfor %}
+        <input type="hidden" name="data_type" value="{{ data_type }}">
+        <button type="submit">Add</button>
+    </form>
+</body>
+</html>

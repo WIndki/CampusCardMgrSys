@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册界面</title>
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container-fluid position-absolute top-50 start-50 translate-middle">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-md-6" style="max-width: 400px;">
+                <div class="card mt-5 shadow-lg rounded-3" style="backdrop-filter: blur(10px); background-color: rgba(255, 255, 255, 0.75);">
+                    <div class="card-header text-center">
+                        <h3>注册</h3>
+                    </div>
+                    <div class="card-body">
+                        <form action="/register/" method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="username" class="form-label">用户名</label>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="请输入账号">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">密码</label>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码">
+                            </div>
+                            <div class="mb-3">
+                                <label for="userType" class="form-label">用户类型</label>
+                                <select class="form-select" id="userType" name="userType">
+                                    <option value="student">学生</option>
+                                    <option value="staff">教师</option>
+                                    <option value="admin">管理员</option>
+                                </select>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">注册</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="#">忘记密码?</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorModalLabel">提示</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{ message }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+{% if message %}
+<script>
+    var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+    errorModal.show();
+</script>
+{% endif %}
+</html>
