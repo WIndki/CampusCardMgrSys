@@ -37,6 +37,7 @@ def userRegister(request):
             while User.objects.filter(userId=userId):
                 userId = str(uuid.uuid4())[:10]
             User.objects.create(userId=userId,username=username, password=password, userType=userType)
+            Card.objects.create(cardId=userId, userId=userId, balance=0,cardStatus=True)
             return render(request, 'register.html', {'message': '注册成功', 'status': 'success'})
     else:
         return render(request, 'register.html')
