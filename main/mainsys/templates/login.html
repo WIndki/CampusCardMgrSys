@@ -13,7 +13,8 @@
     <div class="container-fluid position-absolute top-50 start-50 translate-middle">
         <div class="row justify-content-center align-items-center">
             <div class="col-md-6" style="max-width: 400px;">
-                <div class="card mt-5 shadow-lg rounded-3" style="backdrop-filter: blur(10px); background-color: rgba(255, 255, 255, 0.75);">
+                <div class="card mt-5 shadow-lg rounded-3"
+                    style="backdrop-filter: blur(10px); background-color: rgba(255, 255, 255, 0.75);">
                     <div class="card-header text-center">
                         <h3>登录</h3>
                     </div>
@@ -22,11 +23,13 @@
                             {% csrf_token %}
                             <div class="mb-3">
                                 <label for="username" class="form-label">用户名</label>
-                                <input type="text" class="form-control" id="username" placeholder="请输入用户名" name="username">
+                                <input type="text" class="form-control" id="username" placeholder="请输入用户名"
+                                    name="username">
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">密码</label>
-                                <input type="password" class="form-control" id="password" placeholder="请输入密码" name="password">
+                                <input type="password" class="form-control" id="password" placeholder="请输入密码"
+                                    name="password">
                             </div>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">登录</button>
@@ -55,17 +58,27 @@
                     {{ message }}
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">确认</button>
                 </div>
             </div>
         </div>
     </div>
 </body>
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
-{% if message %}
+{% if status == 'success' %}
+<script>
+    var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+    errorModal.show();
+    var myModal = document.getElementById('errorModal');
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+        window.location.href = '/index';
+    });
+</script>
+{% elif status == 'error' %}
 <script>
     var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
     errorModal.show();
 </script>
 {% endif %}
+
 </html>
