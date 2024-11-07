@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from .models import *
 from .form import *
 import uuid
@@ -36,8 +36,8 @@ def userRegister(request):
             userId = str(uuid.uuid4())[:10]
             while User.objects.filter(userId=userId):
                 userId = str(uuid.uuid4())[:10]
-            User.objects.create(userId=userId,username=username, password=password, userType=userType)
-            Card.objects.create(cardId=userId, userId=userId, balance=0,cardStatus=True)
+            temp_user = User.objects.create(userId=userId,username=username, password=password, userType=userType)
+            Card.objects.create(cardId=userId, userId=temp_user, cardBalance=0,cardStatus=True)
             return render(request, 'register.html', {'message': '注册成功', 'status': 'success'})
     else:
         return render(request, 'register.html')
@@ -55,4 +55,17 @@ def userChangePassword(request):
             return render(request, 'changePassword.html', {'message': '用户名或密码错误', 'status': 'error'})
     else:
         return render(request, 'changePassword.html')
+
+def index(request):
+    if request.session.get('is_login', None):
+        user_id = request.COOKIES.get('user_id')
+        if user_id != request.session['user_id']:
+            return redirect('/login/')
+        user = User.objects.filter(userId=user_id)
+        card = Card.objects.filter(cardId=user_id)
+        if not user or not card:
+            return redirect('/login/', {'message': '用户或卡不存在', 'status': 'error'})
+        return render(request, 'index.html', {'user': user[0], 'card': card[0]})
+    else:
+        return redirect('/login/')
 
