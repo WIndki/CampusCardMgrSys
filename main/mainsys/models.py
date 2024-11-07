@@ -27,7 +27,7 @@ class User(models.Model):
         return str(UserInfo)
 
 class Card(models.Model):
-    cardId = models.CharField(primary_key=True,validators=[RegexValidator(regex='^.{10}$', message='Length has to be 8', code='nomatch')], max_length=8, null=False, blank=False)
+    cardId = models.CharField(primary_key=True,validators=[RegexValidator(regex='^.{10}$', message='Length has to be 8', code='nomatch')], max_length=10, null=False, blank=False)
     userId = models.ForeignKey(to=User, on_delete=models.CASCADE,related_name='ownerId')
     cardBalance = models.FloatField(default=0)
     cardStatus = models.BooleanField()

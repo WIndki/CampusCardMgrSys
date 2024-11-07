@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block content %}
+  <div class="container mt-5">
+    <div class="row gap-3 justify-content-center">
+      <div class="col-md-3 p-3 shadow rounded-3 bg-light overflow-auto">
+        <h1>当前帐号信息</h1>
+        {% for card in cards %}
+        <div class="card mt-3">
+            <div class="card-header">
+                账户详情
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">卡号：{{ card.cardId }}</h5>
+                <p class="card-text">学号：{{ card.userId.userId }}</p>
+                <p class="card-text">余额：￥{{ card.cardBalance }}</p>
+                <p class="card-text">状态：{{ card.cardStatus }}</p>
+            </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="col-md-6 shadow rounded-3 bg-light overflow-auto">
+        <h1>校园卡信息</h1>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">卡号</th>
+              <th scope="col">消费类型</th>
+              <th scope="col">消费金额</th>
+              <th scope="col">消费时间</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for item in billlogs %}
+            <tr>
+              <th scope="row">{{ forloop.counter }}</th>
+              <td>{{ item.cardId }}</td>
+              <td>{{ item.billType }}</td>
+              <td>{{ item.billAmount }}</td>
+              <td>{{ item.billTime }}</td>
+            </tr>
+          </tbody>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+</body>
+{% block javascript %}
+<script>
+  nav_link_a = document.querySelectorAll(".nav-link")
+  for(i=0;i<nav_link_a.length;i++){
+    if(nav_link_a[i].innerText == "费用管理"){
+      nav_link_a[i].classList.add("active")
+    }
+  }
+</script>
+{% endblock %}
+</html>

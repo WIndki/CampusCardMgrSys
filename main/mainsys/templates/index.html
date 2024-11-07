@@ -9,18 +9,18 @@
             <tr>
               <th scope="col">#</th>
               <th scope="col">卡号</th>
-              <th scope="col">学号</th>
+              <th scope="col">用户ID</th>
               <th scope="col">余额</th>
               <th scope="col">操作</th>
             </tr>
           </thead>
           <tbody>
-            {% for item in card_list %}
+          {% for item in cards %}
             <tr>
               <th scope="row">{{ forloop.counter }}</th>
-              <td>{{ item.card_id }}</td>
-              <td>{{ item.student_id }}</td>
-              <td>{{ item.blance }}</td>
+              <td>{{ item.cardId }}</td>
+              <td>{{ item.userId.userId }}</td>
+              <td>{{ item.cardBalance }}</td>
               <td>
                 <button type="button" class="btn btn-outline-info">详细</button>
                 <button type="button" class="btn btn-outline-info">编辑</button>

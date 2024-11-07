@@ -6,6 +6,14 @@ import datetime
 from django.http import HttpResponse
 # Create your views here.
 
+def alive_session(request):
+    if request.session.get('is_login', None) and request.COOKIES.get('user_id') == request.session.get('user_id', None):
+        user = User.objects.filter(userId=request.session.get('user_id'))
+        card = Card.objects.filter(cardId=request.session.get('user_id'))
+        if user and card:
+            return True
+    return False
+
 def userLogin(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -23,6 +31,12 @@ def userLogin(request):
             return render(request, 'login.html', {'message': '用户名或密码错误', 'status': 'error'})
     else:
         return render(request, 'login.html')
+
+def userLogout(request):
+    response = redirect('/login/')
+    response.delete_cookie('user_id')
+    request.session.flush()
+    return response
 
 def userRegister(request):
     if request.method == 'POST':
@@ -57,15 +71,33 @@ def userChangePassword(request):
         return render(request, 'changePassword.html')
 
 def index(request):
-    if request.session.get('is_login', None):
+    if alive_session(request):
         user_id = request.COOKIES.get('user_id')
-        if user_id != request.session['user_id']:
-            return redirect('/login/')
-        user = User.objects.filter(userId=user_id)
-        card = Card.objects.filter(cardId=user_id)
-        if not user or not card:
-            return redirect('/login/', {'message': '用户或卡不存在', 'status': 'error'})
-        return render(request, 'index.html', {'user': user[0], 'card': card[0]})
+        user = User.objects.filter(userId=user_id)[0]
+        cards = Card.objects.filter(cardId=user_id)
+        return render(request, 'index.html', {'user': user, 'cards': cards})
+    else:
+        return redirect('/login/')
+
+def cardBill(request):
+    if alive_session(request):
+        user_id = request.COOKIES.get('user_id')
+        user = User.objects.filter(userId=user_id)[0]
+        cards = Card.objects.filter(cardId=user_id)
+        bills = []
+        for card in cards:
+            billlogs = billLog.objects.filter(cardId=card.cardId)
+            bills.extend(billlogs)
+        return render(request, 'cardBill.html', {'user': user, 'cards': cards, 'bills': bills})
+    else:
+        return redirect('/login/')
+
+def account(request):
+    if alive_session(request):
+        user_id = request.COOKIES.get('user_id')
+        user = User.objects.filter(userId=user_id)[0]
+        cards = Card.objects.filter(cardId=user_id)
+        return render(request, 'account.html', {'user': user, 'cards': cards})
     else:
         return redirect('/login/')
 
