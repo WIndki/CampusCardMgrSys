@@ -1,115 +1,129 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>校园卡信息</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #e3f2fd;">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">校园卡</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/index.html">首页</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">账户管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">费用管理</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            账号
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="#">修改密码</a></li>
-                            <li><a class="dropdown-item" href="#">退出登录</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="#">帮助</a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    <div class="container mt-5">
-        <div class="row g-10 justify-content-center">
-            <div class="col-md-6 p-2">
-                <div class="card shadow-lg"">
-                    <div class=" card-body">
-                    <div class="text-center">
-                        <h1 class="card-title mb-5">当前帐号信息</h1>
-                        <h4 class="card-text mb-3">卡号：123456789</h4>
-                        <h4 class="card-text mb-3">学号：2021000000</h4>
-                        <h4 class="card-text mb-3">余额：￥100.00</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row g-10 justify-content-center">
         <div class="col-md-6 p-2">
             <div class="card shadow-lg"">
+                    <div class=" card-body">
+                {% for card in cards %}
+                <h2 class="card-title">卡{{ forloop.counter }}卡号：{{ card.cardId }}</h2>
+                <h4 class="card-text">学号：{{ card.userId.userId }}</h4>
+                <h4 class="card-text">余额：￥{{ card.cardBalance }}</h4>
+                <h4 class="card-text">状态：{{ card.cardStatus }}</h4>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 p-2">
+        <div class="card shadow-lg"">
             <div class=" card-body">
-                <div class="text-center">
-                    <h1 class="card-title mb-5">充值</h1>
+            <div class="text-center">
+                <h1 class="card-title mb-5">充值</h1>
+            </div>
+            <form id="charge" action="/cardCharge/" method="post">
+                {% csrf_token %}
+                <div class="input-group input-group-lg mb-4">
+                    <span class="input-group-text">卡号</span>
+                    <input type="text" class="form-control" id="cardNumber" placeholder="请输入卡号" name="cardId">
                 </div>
-                <form id="changer" action="/account.html/" method="post">
-                    <div class="input-group input-group-lg mb-4">
-                        <span class="input-group-text">卡号</span>
-                        <input type="text" oninput="value=value.replace(/[^\d]/g,'')" class="form-control"
-                            id="cardNumber" placeholder="请输入卡号">
-                    </div>
-                    <div class="input-group input-group-lg mb-4">
-                        <span class="input-group-text">学号</span>
-                        <input type="text" oninput="value=value.replace(/[^\d]/g,'')" class="form-control"
-                            id="studentNumber" placeholder="请输入学号">
-                    </div>
-                    <div class="input-group  input-group-lg mb-4">
-                        <span class="input-group-text">￥</span>
-                        <input type="text" oninput="value=value.replace(/[^\d]/g,'')" class="form-control" id="balance"
-                            placeholder="请输入充值金额">
-                    </div>
-                    <div class="d-grid">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#exampleModal">充值</button>
-                    </div>
+                <div class="input-group input-group-lg mb-4">
+                    <span class="input-group-text">账号</span>
+                    <input type="text" class="form-control" id="studentNumber" placeholder="请输入账号" name="userId">
+                </div>
+                <div class="input-group  input-group-lg mb-4">
+                    <span class="input-group-text">￥</span>
+                    <input type="text" oninput="value=value.replace(/[^\d]/g,'')" class="form-control" id="balance"
+                        placeholder="请输入充值金额" name="chargeMoney">
+                </div>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#errorModal">充值</button>
+                </div>
 
-                </form>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="col-md-12 p-2">
+    <div class="card shadow-lg">
+        <div class="card-body">
+            <div class="text-center">
+                <h4 class="card-title mb-5">消费记录</h4>
+            </div>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">卡号</th>
+                        <th scope="col">消费类型</th>
+                        <th scope="col">消费金额</th>
+                        <th scope="col">消费时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in billlogs %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>{{ item.cardId.cardId }}</td>
+                        <td>{{ item.billType }}</td>
+                        <td>{{ item.billAmount }}</td>
+                        <td>{{ item.billTime }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="errorModalLabel">提示</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{ message }}
+            </div>
+            <div class="modal-footer">
+                {% if message %}
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">确认</button>
+                {% else %}
+                <button type="submit" form="charge" class="btn btn-secondary">确认充值</button>
+                {% endif %}
             </div>
         </div>
     </div>
-    </div>
-    </div>
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">充值</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    ...
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="submit" form="changer" class="btn btn-primary">确认</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-
-</html>
+</div>
+{% endblock %}
+{% block javascript %}
+<script>
+    nav_link_a = document.querySelectorAll(".nav-link")
+    for (i = 0; i < nav_link_a.length; i++) {
+        if (nav_link_a[i].innerText == "账户管理") {
+            nav_link_a[i].classList.add("active")
+        }
+    }
+</script>
+{% if status == 'success' %}
+<script>
+    var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+    errorModal.show();
+    var myModal = document.getElementById('errorModal');
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+        window.location.href = '/account';
+    });
+</script>
+{% elif status == 'error' %}
+<script>
+    var errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+    errorModal.show();
+</script>
+{% endif %}
+<script>
+    var changer = document.getElementById('changer');
+</script>
+{% endblock %}

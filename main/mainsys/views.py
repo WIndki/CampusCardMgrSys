@@ -14,18 +14,26 @@ def alive_session(request):
             return True
     return False
 
+def recordBill(card,amount,billType):
+    try:
+        billLog.objects.create(cardId=card, billType=billType, billAmount=amount, billTime=datetime.datetime.now())
+        return True
+    except:
+        return False
+
 def userLogin(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = User.objects.filter(username=username, password=password)
         if user:
+            user = user[0]
             user.update(lastLogin=datetime.datetime.now())
-            request.session['user_id'] = user[0].userId
+            request.session['user_id'] = user.userId
             request.session['is_login'] = True
             request.session.set_expiry(3600)
             response = render(request, 'login.html', {'message': '登录成功', 'status': 'success'})
-            response.set_cookie('user_id', user[0].userId, max_age=3600)
+            response.set_cookie('user_id', user.userId, max_age=3600)
             return response
         else:
             return render(request, 'login.html', {'message': '用户名或密码错误', 'status': 'error'})
@@ -63,6 +71,7 @@ def userChangePassword(request):
         newPassword = request.POST.get('newPassword')
         user = User.objects.filter(username=username, password=password)
         if user and newPassword!=password and newPassword:
+            user = user[0]
             user.update(password=newPassword)
             return render(request, 'changePassword.html', {'message': '修改成功', 'status': 'success'})
         else:
@@ -73,31 +82,56 @@ def userChangePassword(request):
 def index(request):
     if alive_session(request):
         user_id = request.COOKIES.get('user_id')
-        user = User.objects.filter(userId=user_id)[0]
+        user = User.objects.filter(userId=user_id)
         cards = Card.objects.filter(cardId=user_id)
-        return render(request, 'index.html', {'user': user, 'cards': cards})
-    else:
-        return redirect('/login/')
+        if user and cards:
+            user = user[0]
+            return render(request, 'index.html', {'user': user, 'cards': cards})
+    return redirect('/login/')
 
 def cardBill(request):
     if alive_session(request):
         user_id = request.COOKIES.get('user_id')
-        user = User.objects.filter(userId=user_id)[0]
+        user = User.objects.filter(userId=user_id)
         cards = Card.objects.filter(cardId=user_id)
-        bills = []
-        for card in cards:
-            billlogs = billLog.objects.filter(cardId=card.cardId)
-            bills.extend(billlogs)
-        return render(request, 'cardBill.html', {'user': user, 'cards': cards, 'bills': bills})
-    else:
-        return redirect('/login/')
+        if user and cards:
+            user = user[0]
+            bills = []
+            for card in cards:
+                billlogs = billLog.objects.filter(cardId=card.cardId)
+                bills.extend(billlogs)
+            return render(request, 'cardBill.html', {'user': user, 'cards': cards, 'bills': bills})
+    return redirect('/login/')
 
 def account(request):
     if alive_session(request):
         user_id = request.COOKIES.get('user_id')
-        user = User.objects.filter(userId=user_id)[0]
+        user = User.objects.filter(userId=user_id)
         cards = Card.objects.filter(cardId=user_id)
-        return render(request, 'account.html', {'user': user, 'cards': cards})
-    else:
-        return redirect('/login/')
+        if user and cards:
+            user = user[0]
+            bills = []
+            for card in cards:
+                billlogs = billLog.objects.filter(cardId=card.cardId)
+                bills.extend(billlogs)
+            if request.session.get('message',None):
+                message = request.session.pop('message',None)
+                return render(request, 'account.html', {'user': user, 'cards': cards, 'bills': bills, 'message': message, 'status': 'success'})
+            return render(request, 'account.html', {'user': user, 'cards': cards, 'bills': bills})
+    return redirect('/login/')
 
+def cardCharge(request):
+    if alive_session(request) and request.method == "POST":
+        chargeCardId = request.POST.get('CardId')
+        chargeUserId = request.POST.get('UserId')
+        chargeMoney = request.POST.get('chargeMoney')
+        card = Card.objects.filter(cardId=chargeCardId)
+        if card and chargeUserId == card[0].userId.userId:
+            card = card[0]
+            card.update(cardBalance=card.cardBalance+float(chargeMoney))
+            recordBill(card,chargeMoney,'charge')
+            request.session['message'] = '充值成功'
+            return redirect('/account/')
+        request.session['message'] = '充值失败'
+        return redirect('/account/')
+    return redirect('/login/')
