@@ -42,6 +42,7 @@ class Card(models.Model):
 class book(models.Model):
     bookId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     bookName = models.CharField(max_length=50, null=False, blank=False)
+    bookImgUrl = models.CharField(max_length=300, null=True, blank=True)
     bookAuthor = models.CharField(max_length=50)
     bookPrice = models.FloatField(validators=[MinValueValidator(0.00)])
     bookStatus = models.BooleanField(default=True)
@@ -69,17 +70,18 @@ class borrowLog(models.Model):
         }
         return str(BorrowInfo)
 
-class goods(models.Model):
-    goodsId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    goodsName = models.CharField(max_length=50, null=False, blank=False)
-    goodsPrice = models.FloatField(validators=[MinValueValidator(0.01)])
-    goodsAmount = models.IntegerField()
+class good(models.Model):
+    goodId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    goodName = models.CharField(max_length=50, null=False, blank=False)
+    goodImgUrl = models.CharField(max_length=300, null=True, blank=True)
+    goodPrice = models.FloatField(validators=[MinValueValidator(0.01)])
+    goodAmount = models.IntegerField()
     def __str__(self):
         GoodsInfo = {
-            "goodsId": self.goodsId,
-            "goodsName": self.goodsName,
-            "goodsPrice": self.goodsPrice,
-            "goodsStatus": self.goodsStatus
+            "goodId": self.goodsId,
+            "goodName": self.goodsName,
+            "goodPrice": self.goodsPrice,
+            "goodStatus": self.goodsStatus
         }
         return str(GoodsInfo)
 
