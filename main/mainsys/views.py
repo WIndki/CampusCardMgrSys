@@ -28,7 +28,8 @@ def userLogin(request):
         user = User.objects.filter(username=username, password=password)
         if user:
             user = user[0]
-            user.update(lastLogin=datetime.datetime.now())
+            user.lastLoginTime = datetime.datetime.now()
+            user.save()
             request.session['user_id'] = user.userId
             request.session['is_login'] = True
             request.session.set_expiry(3600)
@@ -72,7 +73,8 @@ def userChangePassword(request):
         user = User.objects.filter(username=username, password=password)
         if user and newPassword!=password and newPassword:
             user = user[0]
-            user.update(password=newPassword)
+            user.password = newPassword
+            user.save()
             return render(request, 'changePassword.html', {'message': '修改成功', 'status': 'success'})
         else:
             return render(request, 'changePassword.html', {'message': '用户名或密码错误', 'status': 'error'})
@@ -113,6 +115,9 @@ def account(request):
             bills = []
             for card in cards:
                 billlogs = billLog.objects.filter(cardId=card.cardId)
+                for bill in billlogs:
+                    bill.billType = '充值' if bill.billType == 'charge' else '消费'
+                    bill.billTime = bill.billTime.strftime('%Y-%m-%d %H:%M:%S')
                 bills.extend(billlogs)
             if request.session.get('message',None):
                 message = request.session.pop('message',None)
@@ -122,16 +127,27 @@ def account(request):
 
 def cardCharge(request):
     if alive_session(request) and request.method == "POST":
-        chargeCardId = request.POST.get('CardId')
-        chargeUserId = request.POST.get('UserId')
+        chargeCardId = request.POST.get('cardId')
+        chargeUserId = request.POST.get('userId')
         chargeMoney = request.POST.get('chargeMoney')
         card = Card.objects.filter(cardId=chargeCardId)
         if card and chargeUserId == card[0].userId.userId:
             card = card[0]
-            card.update(cardBalance=card.cardBalance+float(chargeMoney))
+            card.cardBalance += float(chargeMoney)
+            card.save()
             recordBill(card,chargeMoney,'charge')
             request.session['message'] = '充值成功'
             return redirect('/account/')
         request.session['message'] = '充值失败'
         return redirect('/account/')
+    return redirect('/login/')
+
+def shop(request):
+    if alive_session(request):
+        user_id = request.COOKIES.get('user_id')
+        user = User.objects.filter(userId=user_id)
+        cards = Card.objects.filter(cardId=user_id)
+        if user and cards:
+            user = user[0]
+            return render(request, 'shop.html', {'user': user, 'cards': cards})
     return redirect('/login/')

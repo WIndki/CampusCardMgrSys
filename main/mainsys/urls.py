@@ -10,6 +10,7 @@ urlpatterns = [
     path('account/', views.account, name='account'),
     # path('cardRegister/', views.cardRegister, name='cardRegister'),
     path('cardCharge/', views.cardCharge, name='cardCharge'),
+    path('shop/', views.shop, name='shop'),
     # path('cardConsume/', views.cardConsume, name='cardConsume'),
     # path('bookBorrow/', views.bookBorrow, name='bookBorrow'),
     # path('bookReturn/', views.bookReturn, name='bookReturn'),

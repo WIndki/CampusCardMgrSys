@@ -55,13 +55,13 @@
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">卡号</th>
-                        <th scope="col">消费类型</th>
-                        <th scope="col">消费金额</th>
-                        <th scope="col">消费时间</th>
+                        <th scope="col">类型</th>
+                        <th scope="col">金额</th>
+                        <th scope="col">时间</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in billlogs %}
+                    {% for item in bills %}
                     <tr>
                         <th scope="row">{{ forloop.counter }}</th>
                         <td>{{ item.cardId.cardId }}</td>
