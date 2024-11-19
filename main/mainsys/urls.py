@@ -11,6 +11,7 @@ urlpatterns = [
     # path('cardRegister/', views.cardRegister, name='cardRegister'),
     path('cardCharge/', views.cardCharge, name='cardCharge'),
     path('shop/', views.shop, name='shop'),
+    path('shop/api/', views.shopAPI, name='shopAPI'),
     # path('cardConsume/', views.cardConsume, name='cardConsume'),
     # path('bookBorrow/', views.bookBorrow, name='bookBorrow'),
     # path('bookReturn/', views.bookReturn, name='bookReturn'),

@@ -1,9 +1,11 @@
 from django.shortcuts import render,redirect
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from .models import *
 from .form import *
 import uuid
 import datetime
 from django.http import HttpResponse
+import json
 # Create your views here.
 
 def alive_session(request):
@@ -147,7 +149,30 @@ def shop(request):
         user_id = request.COOKIES.get('user_id')
         user = User.objects.filter(userId=user_id)
         cards = Card.objects.filter(cardId=user_id)
+        goods = good.objects.filter(goodAmount__gt=0)
         if user and cards:
             user = user[0]
-            return render(request, 'shop.html', {'user': user, 'cards': cards})
+            return render(request, 'shop.html', {'user': user, 'cards': cards, 'goods': goods})
     return redirect('/login/')
+
+def shopAPI(request):
+    if alive_session(request) and request.method == "POST":
+        try:
+            items = json.loads(request.body.decode('utf-8'))
+            for item in items:
+                goodId = item['goodId']
+                goodItem = good.objects.filter(goodId=goodId)
+                if goodItem and goodItem[0].goodAmount >= goodAmount:
+                    goodItem = goodItem[0]
+                    goodItem.goodAmount -= goodAmount
+                    goodItem.save()
+                    card = Card.objects.filter(cardId=request.COOKIES.get('user_id'))[0]
+                    card.cardBalance -= goodItem.goodPrice * goodAmount
+                    card.save()
+                    recordBill(card,goodItem.goodPrice * goodAmount,'consume')
+                else:
+                    return HttpResponse(json.dumps({'message': '商品数量不足'}), content_type="application/json", status=400)
+        except json.JSONDecodeError:
+            return HttpResponse(json.dumps({'message': 'Invalid JSON'}), content_type="application/json", status=400)
+        print(items)
+    return redirect('/shop/')

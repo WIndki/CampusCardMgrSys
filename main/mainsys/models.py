@@ -78,10 +78,10 @@ class good(models.Model):
     goodAmount = models.IntegerField()
     def __str__(self):
         GoodsInfo = {
-            "goodId": self.goodsId,
-            "goodName": self.goodsName,
-            "goodPrice": self.goodsPrice,
-            "goodStatus": self.goodsStatus
+            "goodId": self.goodId,
+            "goodName": self.goodName,
+            "goodPrice": self.goodPrice,
+            "goodAmount": self.goodAmount
         }
         return str(GoodsInfo)
 
