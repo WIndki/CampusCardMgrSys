@@ -102,11 +102,10 @@ def account(request):  # 账户页面
         user_id = request.COOKIES.get('user_id')  # 获取用户ID
         user = get_object_or_404(User, userId=user_id)  # 获取用户
         cards = Card.objects.filter(userId=user_id)  # 获取用户的卡片
-        bills = billLog.objects.filter(cardId__in=[card.cardId for card in cards])  # 获取卡片的账单
+        bills = billLog.objects.filter(cardId__in=[card.cardId for card in cards]).order_by('-billTime',)  # 获取卡片的账单
         for bill in bills:  # 遍历账单
             bill.billType = '充值' if bill.billType == 'charge' else '消费'  # 转换账单类型
             bill.billTime = bill.billTime.strftime('%Y-%m-%d %H:%M:%S')  # 格式化账单时间
-        bills = sorted(bills, key=lambda x: x.billTime, reverse=True)  # 按时间倒序排序账单
         message = request.session.pop('message', None)  # 获取会话中的消息
         return render(request, 'account.html', {'user': user, 'cards': cards, 'bills': bills, 'message': message, 'status': 'success' if message else None})  # 渲染账户页面
     return redirect('/login/')  # 重定向到登录页面
@@ -171,3 +170,37 @@ def shopAPI(request):  # 商店API
         except json.JSONDecodeError:  # 捕获JSON解析错误
             return HttpResponse(json.dumps({'message': 'Invalid JSON'}), content_type="application/json", status=200)  # 返回无效JSON响应
     return redirect('/shop/')  # 重定向到商店页面
+
+def library(request):  # 图书馆页面
+    if alive_session(request):  # 如果会话有效
+        user_id = request.COOKIES.get('user_id')  # 获取用户ID
+        user = get_object_or_404(User, userId=user_id)  # 获取用户
+        books = Book.objects.all()  # 获取所有书籍
+        return render(request, 'library.html', {'user': user, 'books': books})  # 渲染图书馆页面
+    return redirect('/login/')  # 重定向到登录页面
+
+def libraryAPI(request):  # 图书馆API
+    if alive_session(request) and request.method == "POST":  # 如果会话有效且请求方法是POST
+        user_id = request.COOKIES.get('user_id')  # 获取用户ID
+        user = get_object_or_404(User, userId=user_id)  # 获取用户
+        try:
+            messageBody = json.loads(request.body.decode('utf-8'))  # 解析请求体
+            book_id = messageBody.get('bookId')  # 获取书籍ID
+            action = messageBody.get('action')  # 获取操作类型
+            book = get_object_or_404(Book, bookId=book_id)  # 获取书籍
+            if action == 'borrow' and book.available:  # 如果操作是借书且书籍可借
+                book.available = False  # 设置书籍不可借
+                book.borrower = user  # 设置借书人
+                book.borrowDate = datetime.datetime.now()  # 设置借书日期
+                book.save()  # 保存书籍
+                return HttpResponse(json.dumps({'message': 'success'}), content_type="application/json", status=200)  # 返回成功响应
+            elif action == 'return' and book.borrower == user:  # 如果操作是还书且书籍借书人是当前用户
+                book.available = True  # 设置书籍可借
+                book.borrower = None  # 清空借书人
+                book.borrowDate = None  # 清空借书日期
+                book.save()  # 保存书籍
+                return HttpResponse(json.dumps({'message': 'success'}), content_type="application/json", status=200)  # 返回成功响应
+            return HttpResponse(json.dumps({'message': '操作失败'}), content_type="application/json", status=200)  # 返回失败响应
+        except json.JSONDecodeError:  # 捕获JSON解析错误
+            return HttpResponse(json.dumps({'message': 'Invalid JSON'}), content_type="application/json", status=200)  # 返回无效JSON响应
+    return redirect('/library/')  # 重定向到图书馆页面
