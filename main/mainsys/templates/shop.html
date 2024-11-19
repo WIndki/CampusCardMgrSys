@@ -12,8 +12,8 @@
                     <h5 class="card-title">{{ item.goodName }}</h5>
                     <p class="card-text">价格: {{ item.goodPrice }}</p>
                     <p class="card-text">库存: {{ item.goodAmount }}</p>
-                    <button class="btn btn-primary addCart" data-id="{{ item.goodId }}"
-                        data-name="{{ item.goodName }}" data-price="{{ item.goodPrice }}">加入购物车</button>
+                    <button class="btn btn-primary addCart" data-id="{{ item.goodId }}" data-name="{{ item.goodName }}"
+                        data-price="{{ item.goodPrice }}">加入购物车</button>
                 </div>
             </div>
         </div>
@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<div class="position-fixed bottom-0 end-0 p-2 shadow-lg bg-light rounded " style="z-index: 2;">
+<div class="position-fixed bottom-0 end-0 p-2 shadow bg-light rounded " style="z-index: 2;">
     <button class="btn btn-outline-primary " id="cartButton">购物车</button>
     <div class="card" id="cartCard" style="display: none; max-height: 35%;">
         <div class="card-header">
@@ -37,94 +37,158 @@
             <button class="btn btn-outline-danger" id="clean">清空</button>
             <button class="btn btn-outline-success" id="buyall">结算</button>
             {% csrf_token %}
+            <div class="hiddenDiv" style="display: none;">
+                {% for card in cards %}
+                <p>{{ card.cardId }}</p>
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>
-    {% endblock %}
-    {% block javascript %}
-    <script>
-        var cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-        var csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        updateCart();
-        document.getElementById('cartButton').addEventListener('click', function () {
-            var cartCard = document.getElementById('cartCard');
-            if (cartCard.style.display === 'none') {
-                cartCard.style.display = 'block';
-            } else {
-                cartCard.style.display = 'none';
-            }
+
+<!-- Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="errorModalLabel">提示</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="cardSelect" class="form-label">选择卡片</label>
+                        <select class="form-select" id="cardSelect">
+                            {% for card in cards %}
+                            <option value="{{ card.cardId }}">{{ card.cardId }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirm">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block javascript %}
+<script>
+    nav_link_a = document.querySelectorAll(".nav-link")
+    for (i = 0; i < nav_link_a.length; i++) {
+        if (nav_link_a[i].innerText == "商店") {
+            nav_link_a[i].classList.add("active")
+        }
+    }
+</script>
+<script>
+    var cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+    var csrf_token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    updateCart();
+
+    document.getElementById('cartButton').addEventListener('click', function () {
+        var cartCard = document.getElementById('cartCard');
+        if (cartCard.style.display === 'none') {
+            cartCard.style.display = 'block';
+        } else {
+            cartCard.style.display = 'none';
+        }
+    });
+
+    document.querySelector('#buyall').addEventListener('click', function () {
+        if (cartItems.length === 0) {
+            return;
+        }
+        var modal = document.querySelector('#errorModal');
+        var errorModal = new bootstrap.Modal(modal);
+        errorModal.show();
+        modal.addEventListener('hidden.bs.modal', function (event) {
+            window.location.href = '/shop';
         });
-
-        document.querySelector('#buyall').addEventListener('click', function () {
-            fetch('/shop/api/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-csrftoken': csrf_token
-                },
-                body: JSON.stringify(cartItems)
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-                cleanCart();
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        });
-
-        document.getElementById('cartItems').addEventListener('click', function (e) {
-            if (e.target.tagName === 'BUTTON') {
-                removeItem.call(e.target);
-            }
-        });
-
-        document.getElementById('clean').addEventListener('click', cleanCart);
-
-        var buttons = document.querySelectorAll('.addCart');
-
-        buttons.forEach(function (button) {
-            button.addEventListener('click', function () {
-                var index = button.getAttribute('data-id');
-                var name = button.getAttribute('data-name');
-                var price = button.getAttribute('data-price');
-                var product = {
-                    id: index,
-                    name: name,
-                    price: parseFloat(price)
+        modal.addEventListener('click', function (event) {
+            if (event.target.id === 'confirm') {
+                var cardSelect = document.querySelector('#cardSelect');
+                var cardId = cardSelect.value;
+                var data = {
+                    'cardId': cardId,
+                    'cartItems': cartItems
                 }
-                console.log(product);
-                cartItems.push(product);
-                updateCart();
-            });
+                fetch('/shop/api/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrf_token
+                    },
+                    body: JSON.stringify(data)
+                }).then(response => response.json())
+                    .then(data => {
+                        if (data.message === 'success') {
+                            cartItems = [];
+                            updateCart();
+                            modal.querySelector('.modal-body').innerHTML = '购买成功';
+                            modal.querySelector('.modal-footer #confirm').setAttribute('data-bs-dismiss', 'modal');
+                        }
+                        else {
+                            modal.querySelector('.modal-body').innerHTML = data.message;
+                            modal.querySelector('.modal-footer #confirm').setAttribute('data-bs-dismiss', 'modal');
+                        }
+                    });
+            }
         });
+    });
 
-        function updateCart() {
-            var cartItemsList = document.getElementById('cartItems');
-            var totalPrice = document.getElementById('totalPrice');
-            var total = 0;
-            cartItemsList.innerHTML = '';
-            cartItems.forEach(function (item) {
-                var li = document.createElement('li');
-                li.className = 'list-group-item';
-                li.innerHTML = `${item.name} - 价格: ${item.price} <button class="btn btn-outline-warning btn-sm" index="${cartItems.indexOf(item)}">删除</button>`;
-                total = parseFloat(total) + item.price;
-                cartItemsList.appendChild(li);
-            });
-            totalPrice.textContent = total;
-            localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    document.getElementById('cartItems').addEventListener('click', function (e) {
+        if (e.target.tagName === 'BUTTON') {
+            removeItem.call(e.target);
         }
+    });
 
-        function removeItem() {
-            var index = this.getAttribute('index');
-            cartItems.splice(index, 1);
+    document.getElementById('clean').addEventListener('click', cleanCart);
+
+    var buttons = document.querySelectorAll('.addCart');
+
+    buttons.forEach(function (button) {
+        button.addEventListener('click', function () {
+            var index = button.getAttribute('data-id');
+            var name = button.getAttribute('data-name');
+            var price = button.getAttribute('data-price');
+            var product = {
+                id: index,
+                name: name,
+                price: parseFloat(price)
+            }
+            cartItems.push(product);
             updateCart();
-        }
+        });
+    });
 
-        function cleanCart() {
-            cartItems = [];
-            updateCart();
-        }
-    </script>
-    {% endblock %}
+    function updateCart() {
+        var cartItemsList = document.getElementById('cartItems');
+        var totalPrice = document.getElementById('totalPrice');
+        var total = 0;
+        cartItemsList.innerHTML = '';
+        cartItems.forEach(function (item) {
+            var li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `${item.name} - 价格: ${item.price} <button class="btn btn-outline-warning btn-sm" index="${cartItems.indexOf(item)}">删除</button>`;
+            total = parseFloat(total) + item.price;
+            cartItemsList.appendChild(li);
+        });
+        totalPrice.textContent = total;
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    }
+
+    function removeItem() {
+        var index = this.getAttribute('index');
+        cartItems.splice(index, 1);
+        updateCart();
+    }
+
+    function cleanCart() {
+        cartItems = [];
+        updateCart();
+    }
+</script>
+{% endblock %}

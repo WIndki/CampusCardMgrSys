@@ -50,43 +50,49 @@
             <div class="text-center">
                 <h4 class="card-title mb-5">消费记录</h4>
             </div>
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">卡号</th>
-                        <th scope="col">类型</th>
-                        <th scope="col">金额</th>
-                        <th scope="col">时间</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in bills %}
-                    <tr>
-                        <th scope="row">{{ forloop.counter }}</th>
-                        <td>{{ item.cardId.cardId }}</td>
-                        <td>{{ item.billType }}</td>
-                        <td>{{ item.billAmount }}</td>
-                        <td>{{ item.billTime }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="border" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">卡号</th>
+                            <th scope="col">类型</th>
+                            <th scope="col">金额</th>
+                            <th scope="col">时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in bills %}
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>{{ item.cardId.cardId }}</td>
+                            <td>{{ item.billType }}</td>
+                            <td>{{ item.billAmount }}</td>
+                            <td>{{ item.billTime }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 </div>
 </div>
+
 <!-- Modal -->
 <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="errorModalLabel">提示</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                {{ message }}
+                {% if message %}
+                <p>{{ message }}</p>
+                {% else %}
+                {% endif %}
             </div>
             <div class="modal-footer">
                 {% if message %}
@@ -98,6 +104,7 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
 {% block javascript %}
 <script>
@@ -123,7 +130,16 @@
     errorModal.show();
 </script>
 {% endif %}
+{% if not message %}
 <script>
-    var changer = document.getElementById('changer');
+    var chargeButton = document.querySelector('#charge button');
+    chargeButton.addEventListener('click', function (e) {
+        var modal_body = document.querySelector('#errorModal .modal-body');
+        var value = document.querySelector('input#balance');
+        var p = document.createElement(p);
+        p.innerText = '充值金额为：' + value.value;
+        modal_body.appendChild(p);
+    });
 </script>
+{% endif %}
 {% endblock %}

@@ -87,7 +87,7 @@ def index(request):
     if alive_session(request):
         user_id = request.COOKIES.get('user_id')
         user = User.objects.filter(userId=user_id)
-        cards = Card.objects.filter(cardId=user_id)
+        cards = Card.objects.filter(userId=user_id)
         if user and cards:
             user = user[0]
             return render(request, 'index.html', {'user': user, 'cards': cards})
@@ -97,7 +97,7 @@ def cardBill(request):
     if alive_session(request):
         user_id = request.COOKIES.get('user_id')
         user = User.objects.filter(userId=user_id)
-        cards = Card.objects.filter(cardId=user_id)
+        cards = Card.objects.filter(userId=user_id)
         if user and cards:
             user = user[0]
             bills = []
@@ -111,7 +111,7 @@ def account(request):
     if alive_session(request):
         user_id = request.COOKIES.get('user_id')
         user = User.objects.filter(userId=user_id)
-        cards = Card.objects.filter(cardId=user_id)
+        cards = Card.objects.filter(userId=user_id)
         if user and cards:
             user = user[0]
             bills = []
@@ -121,6 +121,7 @@ def account(request):
                     bill.billType = '充值' if bill.billType == 'charge' else '消费'
                     bill.billTime = bill.billTime.strftime('%Y-%m-%d %H:%M:%S')
                 bills.extend(billlogs)
+            bills.sort(key=lambda x: x.billTime, reverse=True)
             if request.session.get('message',None):
                 message = request.session.pop('message',None)
                 return render(request, 'account.html', {'user': user, 'cards': cards, 'bills': bills, 'message': message, 'status': 'success'})
@@ -148,7 +149,7 @@ def shop(request):
     if alive_session(request):
         user_id = request.COOKIES.get('user_id')
         user = User.objects.filter(userId=user_id)
-        cards = Card.objects.filter(cardId=user_id)
+        cards = Card.objects.filter(userId=user_id)
         goods = good.objects.filter(goodAmount__gt=0)
         if user and cards:
             user = user[0]
@@ -157,22 +158,37 @@ def shop(request):
 
 def shopAPI(request):
     if alive_session(request) and request.method == "POST":
-        try:
-            items = json.loads(request.body.decode('utf-8'))
-            for item in items:
-                goodId = item['goodId']
-                goodItem = good.objects.filter(goodId=goodId)
-                if goodItem and goodItem[0].goodAmount >= goodAmount:
-                    goodItem = goodItem[0]
-                    goodItem.goodAmount -= goodAmount
-                    goodItem.save()
-                    card = Card.objects.filter(cardId=request.COOKIES.get('user_id'))[0]
-                    card.cardBalance -= goodItem.goodPrice * goodAmount
-                    card.save()
-                    recordBill(card,goodItem.goodPrice * goodAmount,'consume')
-                else:
-                    return HttpResponse(json.dumps({'message': '商品数量不足'}), content_type="application/json", status=400)
-        except json.JSONDecodeError:
-            return HttpResponse(json.dumps({'message': 'Invalid JSON'}), content_type="application/json", status=400)
-        print(items)
+        user_id = request.COOKIES.get('user_id')
+        user = User.objects.filter(userId=user_id)
+        cards = Card.objects.filter(cardId=user_id)
+        if user and cards:
+            try:
+                messageBody = json.loads(request.body.decode('utf-8'))
+                payCard = messageBody.get('cardId')
+                items = messageBody.get('cartItems')
+                if any(card.cardId == payCard for card in cards):
+                    card = Card.objects.filter(cardId=payCard)[0]
+                    item_dict = {}
+                    for item in items:
+                        if item['id'] in item_dict:
+                            item_dict[item['id']]['quantity'] += 1
+                        else:
+                            item_dict[item['id']] = {'id': item['id'], 'quantity': 1}
+                    items = list(item_dict.values())
+                    unEnough = []
+                    for item in items:
+                        item_object = good.objects.filter(goodId=item['id'])[0]
+                        if item_object.goodAmount >= item['quantity'] and card.cardBalance >= float(item_object.goodPrice * item['quantity']):
+                            item_object.goodAmount -= item['quantity']
+                            card.cardBalance -= float(item_object.goodPrice * item['quantity'])
+                            recordBill(card, float(item_object.goodPrice * item['quantity']), '购物')
+                            item_object.save()
+                            card.save()
+                        else :
+                            unEnough.append(item)
+                if not unEnough :
+                    return HttpResponse(json.dumps({'message': 'success'}), content_type="application/json", status=200)
+                return HttpResponse(json.dumps({'message': '购买失败，可能是余额不足或库存不足'}), content_type="application/json", status=200)
+            except json.JSONDecodeError:
+                return HttpResponse(json.dumps({'message': 'Invalid JSON'}), content_type="application/json", status=200)
     return redirect('/shop/')
