@@ -43,9 +43,6 @@ Thumbs.db
 # SQLite数据库文件
 *.sqlite3
 
-# 静态文件
-staticfiles/
-static/
 
 # 临时文件
 *.tmp
