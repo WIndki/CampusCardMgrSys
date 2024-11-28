@@ -7,22 +7,22 @@
 <div class="container mt-4">
     <h2>图书馆</h2>
     {% for book in books %}
-        {% if book.bookStatus == True %}
-        <div class="col-md-4">
-            <img src="{{book.bookImgUrl}}" class="card-img-top" alt="Product Image">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">{{ book.bookName }}</h5>
-                    <p class="card-text">作者: {{ book.bookAuthor }}</p>
-                    <form method="post" action="{% url 'library_borrow'%}" class="books">
-                        {% csrf_token %}
-                        <input type="hidden" name="bookId" value="{{ book.bookId }}">
-                        <button type="submit" class="btn btn-primary">借阅</button>
-                    </form>
-                </div>
+    {% if book.bookStatus == True %}
+    <div class="col-md-4">
+        <img src="{{book.bookImgUrl}}" class="card-img-top" alt="Product Image">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">{{ book.bookName }}</h5>
+                <p class="card-text">作者: {{ book.bookAuthor }}</p>
+                <form method="post" action="{% url 'library_borrow'%}" class="books">
+                    {% csrf_token %}
+                    <input type="hidden" name="bookId" value="{{ book.bookId }}">
+                    <button type="submit" class="btn btn-primary">借阅</button>
+                </form>
             </div>
         </div>
-        {% endif %}
+    </div>
+    {% endif %}
     {% endfor %}
 
     <h3 class="mt-5">在借阅书籍</h3>
@@ -36,117 +36,126 @@
         </thead>
         <tbody>
             {% for book in borrowed_books %}
-                <tr>
-                    <td>{{ book.bookId.bookName }}</td>
-                    <td>{{ book.borrowTime }}</td>
-                    <td>
-                        <form method="post" action="{% url 'library_return'%}" class="d-inline return">
-                            {% csrf_token %}
-                            <input type="hidden" name="bookId" value="{{ book.bookId.bookId }}">
-                            <button type="submit" class="btn btn-danger btn-sm">还书</button>
-                        </form>
-                        <form method="post" action="{% url 'library_renew'%}" class="d-inline renew">
-                            {% csrf_token %}
-                            <input type="hidden" name="bookId" value="{{ book.bookId.bookId }}">
-                            <button type="submit" class="btn btn-warning btn-sm">续借</button>
-                        </form>
-                    </td>
-                </tr>
+            <tr>
+                <td>{{ book.bookId.bookName }}</td>
+                <td>{{ book.borrowTime }}</td>
+                <td>
+                    <form method="post" action="{% url 'library_return'%}" class="d-inline return">
+                        {% csrf_token %}
+                        <input type="hidden" name="bookId" value="{{ book.bookId.bookId }}">
+                        <button type="submit" class="btn btn-danger btn-sm">还书</button>
+                    </form>
+                    <form method="post" action="{% url 'library_renew'%}" class="d-inline renew">
+                        {% csrf_token %}
+                        <input type="hidden" name="bookId" value="{{ book.bookId.bookId }}">
+                        <button type="submit" class="btn btn-warning btn-sm">续借</button>
+                    </form>
+                </td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<!-- Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="successModalLabel"></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <h5 class="modal-title" id="successModalLabel">提示</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">确认</button>
             </div>
         </div>
     </div>
 </div>
 
 
-{% endblock  %}
+{% endblock %}
 
 {% block javascript %}
 <script>
-        const borrowForms = document.querySelectorAll('.books');
-        borrowForms.forEach(form => {
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-                const formData = new FormData(form);
-                fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-                    }
-                })
+    nav_link_a = document.querySelectorAll(".nav-link")
+    for (i = 0; i < nav_link_a.length; i++) {
+        if (nav_link_a[i].innerText == "图书") {
+            nav_link_a[i].classList.add("active")
+        }
+    }
+    var myModal = document.getElementById('successModal');
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+        window.location.href = '/library';
+    });
+    const borrowForms = document.querySelectorAll('.books');
+    borrowForms.forEach(form => {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.message) {
-                        document.getElementById('successModalLabel').textContent = data.message;
-                        var errorModal = new bootstrap.Modal(document.getElementById('successModal'));
-                        errorModal.show();
+                        document.querySelector('#successModal .modal-body').textContent = data.message;
+                        var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                        successModal.show();
                     }
                 });
-            });
         });
+    });
 
-        const returnForms = document.querySelectorAll('.return');
-        returnForms.forEach(form => {
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-                const formData = new FormData(form);
-                fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-                    }
-                })
+    const returnForms = document.querySelectorAll('.return');
+    returnForms.forEach(form => {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.message) {
-                        document.getElementById('successModalLabel').textContent = data.message;
-                        var errorModal = new bootstrap.Modal(document.getElementById('successModal'));
-                        errorModal.show();
+                        document.querySelector('#successModal .modal-body').textContent = data.message;
+                        var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                        successModal.show();
                     }
                 });
-            });
         });
+    });
 
-        const renewForms = document.querySelectorAll('.renew');
-        renewForms.forEach(form => {
-            form.addEventListener('submit', function(event) {
-                event.preventDefault();
-                const formData = new FormData(form);
-                fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-                    }
-                })
+    const renewForms = document.querySelectorAll('.renew');
+    renewForms.forEach(form => {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.message) {
-                        document.getElementById('successModalLabel').textContent = data.message;
-                        var errorModal = new bootstrap.Modal(document.getElementById('successModal'));
-                        errorModal.show();
+                        document.querySelector('#successModal .modal-body').textContent = data.message;
+                        var successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                        successModal.show();
                     }
                 });
-            });
         });
+    });
 </script>
 {% endblock %}
