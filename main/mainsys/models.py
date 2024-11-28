@@ -52,7 +52,7 @@ class book(models.Model):
             "bookName": self.bookName,
             "bookAuthor": self.bookAuthor,
             "bookPrice": self.bookPrice,
-            "bookStock": self.bookStock
+            "bookStatus": self.bookStatus
         }
         return str(BookInfo)
 

@@ -175,8 +175,9 @@ def library(request):  # 图书馆页面
     if alive_session(request):  # 如果会话有效
         user_id = request.COOKIES.get('user_id')  # 获取用户ID
         user = get_object_or_404(User, userId=user_id)  # 获取用户
-        books = Book.objects.all()  # 获取所有书籍
-        return render(request, 'library.html', {'user': user, 'books': books})  # 渲染图书馆页面
+        borrowLogs = borrowLog.objects.filter(userId=user_id, returnTime__isnull=True)  # 获取用户的借书记录
+        books = book.objects.all()  # 获取所有书籍
+        return render(request, 'library.html', {'user': user, 'books': books, 'borrowed_books': borrowLogs})  # 渲染图书馆页面
     return redirect('/login/')  # 重定向到登录页面
 
 def libraryAPI(request):  # 图书馆API
@@ -203,4 +204,44 @@ def libraryAPI(request):  # 图书馆API
             return HttpResponse(json.dumps({'message': '操作失败'}), content_type="application/json", status=200)  # 返回失败响应
         except json.JSONDecodeError:  # 捕获JSON解析错误
             return HttpResponse(json.dumps({'message': 'Invalid JSON'}), content_type="application/json", status=200)  # 返回无效JSON响应
+    return redirect('/library/')  # 重定向到图书馆页面
+
+def library_borrow(request):  # 图书借阅
+    if alive_session(request) and request.method == "POST":  # 如果会话有效且请求方法是POST
+        user_id = request.COOKIES.get('user_id')  # 获取用户ID
+        user = get_object_or_404(User, userId=user_id)  # 获取用户
+        book_id = request.POST.get('bookId')  # 获取书籍ID
+        TheBorrowBook = get_object_or_404(book, bookId=book_id)  # 获取书籍
+        if TheBorrowBook.bookStatus:  # 如果书籍状态是可借
+            TheBorrowBook.bookStatus = False  # 设置书籍状态为不可借
+            borrowLog.objects.create(borrowId=uuid.uuid4(), userId=user, bookId=TheBorrowBook, borrowTime=datetime.datetime.now())  # 创建借书记录
+            TheBorrowBook.save()  # 保存书籍
+            return HttpResponse(json.dumps({'message': '借书成功'}), content_type="application/json", status=200)  # 返回成功响应
+        return HttpResponse(json.dumps({'message': '借书失败'}), content_type="application/json", status=200)  # 返回
+    return redirect('/library/')  # 重定向到图书馆页面
+
+def library_return(request):  # 图书归还
+    if alive_session(request) and request.method == "POST":  # 如果会话有效且请求方法是POST
+        user_id = request.COOKIES.get('user_id')  # 获取用户ID
+        user = get_object_or_404(User, userId=user_id)  # 获取用户
+        book_id = request.POST.get('bookId')  # 获取书籍ID
+        TheBorrowBook = get_object_or_404(book, bookId=book_id)  # 获取书籍
+        borrow_log = borrowLog.objects.filter(userId=user, bookId=TheBorrowBook, returnTime__isnull=True).first()  # 获取借书记录
+        TheBorrowBook.bookStatus = True  # 设置书籍状态为可借
+        borrow_log.returnTime = datetime.datetime.now()  # 设置归还时间
+        TheBorrowBook.save()  # 保存书籍
+        borrow_log.save() # 保存借书记录
+        return HttpResponse(json.dumps({'message': '还书成功'}), content_type="application/json", status=200)  # 返回
+    return redirect('/library/')  # 重定向到图书馆页面
+
+def library_renew(request):  # 图书续借
+    if alive_session(request) and request.method == "POST":  # 如果会话有效且请求方法是POST
+        user_id = request.COOKIES.get('user_id')  # 获取用户ID
+        user = get_object_or_404(User, userId=user_id)  # 获取用户
+        book_id = request.POST.get('bookId')  # 获取书籍ID
+        TheBorrowBook = get_object_or_404(book, bookId=book_id)  # 获取书籍
+        borrow_log = borrowLog.objects.filter(userId=user, bookId=TheBorrowBook, returnTime__isnull=True).first()  # 更新借书记录
+        borrow_log.borrowTime = datetime.datetime.now()
+        borrow_log.save()
+        return HttpResponse(json.dumps({'message': '续借成功'}), content_type="application/json", status=200)  # 返回
     return redirect('/library/')  # 重定向到图书馆页面
