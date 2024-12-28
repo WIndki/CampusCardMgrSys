@@ -4,13 +4,13 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>图书馆</h2>
+<div class="container mt-5">
+    <div class="row">
     {% for book in books %}
     {% if book.bookStatus == True %}
-    <div class="col-md-4">
+    <div class="col-md-3 p3 mw-50">
         <img src="{{book.bookImgUrl}}" class="card-img-top" alt="Product Image">
-        <div class="card mb-4">
+        <div class="card mb-4 shadow-lg">
             <div class="card-body">
                 <h5 class="card-title">{{ book.bookName }}</h5>
                 <p class="card-text">作者: {{ book.bookAuthor }}</p>
@@ -24,7 +24,8 @@
     </div>
     {% endif %}
     {% endfor %}
-
+    </div>
+    <div class="row shadow-lg p-3 mb-5 bg-white rounded">
     <h3 class="mt-5">在借阅书籍</h3>
     <table class="table table-striped">
         <thead>
@@ -55,6 +56,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 
 <!-- Modal -->

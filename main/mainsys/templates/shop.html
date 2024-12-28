@@ -3,7 +3,7 @@
 <div class="container mt-5">
     <div class="row">
         {% for item in goods%}
-        <div class="col-md-3 p-3 " *ngFor="let product of products">
+        <div class="col-md-3 p-3 mw-50" *ngFor="let product of products">
             <div class="card shadow-lg">
                 {% if item.goodImgUrl %}
                 <img src="{{item.goodImgUrl}}" class="card-img-top" alt="Product Image">
